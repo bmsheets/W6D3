@@ -68,17 +68,21 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 const FollowToggle = __webpack_require__(1);
+const UsersSearch = __webpack_require__(3);
 
 $(() => {
   $(".follow-toggle").each((idx, el) => {
     const ft = new FollowToggle($(el));
     console.log(ft);
   });
+  new UsersSearch($('.users-search'), $('.input-search'), $('.users'));
 });
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
+
+const APIUtil = __webpack_require__(2)
 
 class FollowToggle {
   constructor($el) {
@@ -100,28 +104,97 @@ class FollowToggle {
   }
   
   handleClick(event) {
-    const clickMethod = this.followState ? 'DELETE' : 'POST';
-    const url = `/users/${this.userId}/follow`;
-    console.log(clickMethod);
-    console.log(url);
+
     event.preventDefault();
-    const request = $.ajax({
-      url: url,
-      method: clickMethod,
-      dataType: 'json',
-      success: () => {
-        // console.log(this);
-        this.followState = !this.followState;
-        this.render();
-      }
+    this.$el.prop('disabled', true);
+    let request;
+    if (this.followState) {
+      request = APIUtil.unfollowUser(this.userId);
+    } else {
+      request = APIUtil.followUser(this.userId);
+    }
+    
+    request.done(() => {
+      this.$el.prop('disabled', false);
+      this.followState = !this.followState;
+      this.render();
     });
-    // request.done(() => {
-    //   this.render();
-    // });
+    
   }
 }
 
 module.exports = FollowToggle;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+const APIUtil = {
+  followUser: id => {
+    const clickMethod = 'POST';
+    const url = `/users/${id}/follow`;
+    event.preventDefault();
+    return $.ajax({
+      url: url,
+      method: clickMethod,
+      dataType: 'json'
+    })
+  },
+  
+  unfollowUser: id => {
+    const clickMethod = "DELETE";
+    const url = `/users/${id}/follow`;
+    event.preventDefault();
+    return $.ajax({
+      url: url,
+      method: clickMethod,
+      dataType: 'json'
+    })
+  },
+  
+  searchUsers: (queryVal, success) => {
+    const url = "/users/search";
+    const method = "GET";
+    return $.ajax({
+      url: url,
+      method: method,
+      data: { 'query': queryVal },
+      dataType: 'json',
+      success: success
+    });
+  }
+}
+
+module.exports = APIUtil;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const APIUtil = __webpack_require__(2)
+
+class UsersSearch {
+  constructor($el, $input, $ul) {
+    this.$el = $el;
+    this.$input = $input;
+    this.$ul = $ul;
+    this.$input.on("input", this.handleInput.bind(this));
+  }
+  
+  handleInput(event) {
+    APIUtil.searchUsers(event.target.value, this.renderResults.bind(this));
+  }
+  
+  renderResults(users) {
+    this.$ul.children().remove();
+    users.forEach((u) => {
+      this.$ul.append(`<li>${u.username}</li>`);
+    });
+  }
+}
+
+module.exports = UsersSearch;
 
 /***/ })
 /******/ ]);
