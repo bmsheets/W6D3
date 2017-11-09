@@ -46,6 +46,19 @@ const APIUtil = {
       dataType: 'json',
       success: success
     });
+  },
+  
+  fetchTweets: (success, maxCreatedAt) => {
+    const data = maxCreatedAt ? { 'max_created_at': maxCreatedAt } : null;
+    const url = "/feed";
+    const method = "GET";
+    return $.ajax({
+      url: url,
+      method: method,
+      data: data,
+      dataType: 'json',
+      success: success
+    });
   }
 }
 

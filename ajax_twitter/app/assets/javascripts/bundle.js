@@ -70,6 +70,7 @@
 const FollowToggle = __webpack_require__(1);
 const UsersSearch = __webpack_require__(3);
 const TweetCompose = __webpack_require__(4);
+const InfiniteTweets = __webpack_require__(5);
 
 $(() => {
   $(".follow-toggle").each((idx, el) => {
@@ -77,6 +78,7 @@ $(() => {
   });
   new UsersSearch($('.users-search'), $('.input-search'), $('.users'));
   new TweetCompose($(".tweet-compose"));
+  new InfiniteTweets($(".fetch-more"));
 });
 
 /***/ }),
@@ -176,6 +178,19 @@ const APIUtil = {
       dataType: 'json',
       success: success
     });
+  },
+  
+  fetchTweets: (success, maxCreatedAt) => {
+    const data = maxCreatedAt ? { 'max_created_at': maxCreatedAt } : null;
+    const url = "/feed";
+    const method = "GET";
+    return $.ajax({
+      url: url,
+      method: method,
+      data: data,
+      dataType: 'json',
+      success: success
+    });
   }
 }
 
@@ -266,6 +281,41 @@ class TweetCompose {
 }
 
 module.exports = TweetCompose;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const APIUtil = __webpack_require__(2)
+
+class InfiniteTweets {
+  constructor($el) {
+    this.$el = $el;
+    this.maxCreatedAt = null;
+    APIUtil.fetchTweets(this.renderTweets.bind(this));
+    this.$el.on("click", this.handleClick.bind(this));
+  }
+  
+  handleClick(event) {
+    event.preventDefault();
+    APIUtil.fetchTweets(this.renderTweets.bind(this), this.maxCreatedAt);
+  }
+  
+  renderTweets(data) {
+    const $feed = $('#feed');
+    data.forEach ((tweet) => {
+      const $tweet = $('<li>');
+      $tweet.text(`${tweet.content} -- `);
+      const $link = $(`<a href="/users/${tweet.user_id}">${tweet.user.username}</a>`);
+      $tweet.append($link);
+      $tweet.append(` -- ${tweet.created_at}`);
+      $feed.prepend($tweet);
+      this.maxCreatedAt = tweet.created_at;
+    });
+  }
+}
+
+module.exports = InfiniteTweets;
 
 /***/ })
 /******/ ]);
