@@ -31,6 +31,21 @@ const APIUtil = {
       dataType: 'json',
       success: success
     });
+  },
+  
+  createTweet: (data, success) => {
+    const url = "/tweets";
+    const method = "POST";
+    return $.ajax({
+      url: url,
+      method: method,
+      data: { 'tweet': {
+              'content': data
+              } 
+            },  
+      dataType: 'json',
+      success: success
+    });
   }
 }
 
